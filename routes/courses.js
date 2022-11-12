@@ -1,18 +1,19 @@
 const express = require('express');
 const router = express.Router(); 
 const Joy = require('@hapi/joi/lib');
-
+const mongoose = require('mongoose');
 
 /// MongoDV related things 
-const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost/playground')
-     .then(() => console.log("Successfully connected to mongoDB"))
-     .catch(err => console.error('Could not connect to mongoDB..', err));
-
 
 const courseSchema = new mongoose.Schema({
     id : Number,
     name : String
+    // name : {
+    //     type : String,
+    //     require : true,
+    //     minlength: 5,
+    //     maxlength : 20
+    // }
 });
 
 
@@ -41,10 +42,14 @@ async function temp() {
 //Find couses from mongodb
 async function getCourses() {
     const courses = await Course.find()
-    .count();
-
     return courses;
 }
+
+async function getNumberOfCourses() {
+    const courseNumber = await Course.find().count();
+    return courseNumber;
+}
+
 
 // Updating Mongo DB data
 /*
@@ -92,19 +97,14 @@ async function removeCourses(ID){
     const result = await Course.deleteOne({id : ID});
     console.log(result);
 }
-removeCourses(3);
+// removeCourses(3);
 
 ///********** */ mongoDVrelated things 
 
 
-const courses = [
-    {id : 1, name : "Couses 1"},
-    {id : 2, name : "Courses 2"},
-    {id : 3, name : "Courses 3"},
-];
-
-
-router.get('/', (req, res) => {
+router.get('/',async(req, res) => {
+    const courses = await Course.find().sort('name')
+    // finding the course and sorting by their name;
     res.send(courses);
 });
 
@@ -117,7 +117,7 @@ router.get('/:id', (req, res) => {
 
 
 //post data into database
-router.post('/', (req, res) => {
+router.post('/', async(req, res) => {
 
     // checking input validation using joy 
     //designing a schema for input validation
@@ -127,15 +127,16 @@ router.post('/', (req, res) => {
         return ;
     }
 
+    const currentNumberOfCourses = await Course.find().count();
+     
+    const course = new Course({
+        id : currentNumberOfCourses + 1,
+        name : req.body.name  
+    });
 
-    const course = {
-        id : courses.length + 1,
-        name : req.body.name
-    };
-
-    courses.push(course);
+    await course.save();
     res.send(course);
-})
+});
 
 
 // upadating datamodel using put request
