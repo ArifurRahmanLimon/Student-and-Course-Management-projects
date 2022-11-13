@@ -1,23 +1,9 @@
 const express = require('express');
 const router = express.Router(); 
-const Joy = require('@hapi/joi/lib');
 const mongoose = require('mongoose');
+const {Course, validate} = require('../Models/CoursesModel');
 
 /// MongoDV related things 
-
-const courseSchema = new mongoose.Schema({
-    id : Number,
-    name : String
-    // name : {
-    //     type : String,
-    //     require : true,
-    //     minlength: 5,
-    //     maxlength : 20
-    // }
-});
-
-
-const Course = mongoose.model('Course', courseSchema);
 
 async function createCourses() {
 
@@ -121,7 +107,7 @@ router.post('/', async(req, res) => {
 
     // checking input validation using joy 
     //designing a schema for input validation
-    const result = validateCourse(req.body);
+    const result = validate(req.body);
     if (result.error) {
         res.status(400).send(result.error.details[0].message);
         return ;
@@ -144,7 +130,7 @@ router.put('/:id', async(req, res) => {
 
     // now try to validate the input
     // clean code by object desstructuring 
-    const {error} = validateCourse(req.body);
+    const {error} = validate(req.body);
     if (error) {
         res.status(400).send(error.details[0].message);
         return ;
@@ -174,15 +160,6 @@ router.delete('/:id', async(req, res) => {
     res.send(result);
 });
 
-
-//Validating our input of the request body using joy framework of javascript 
-function validateCourse(course) {
-    const schema = Joy.object({
-        name : Joy.string() .min(3).required()
-    })
-    const result = Joy.validate(course, schema);
-    return result;
-}
 
 module.exports = router;
 
