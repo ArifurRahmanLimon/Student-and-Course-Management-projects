@@ -109,10 +109,10 @@ router.get('/',async(req, res) => {
 });
 
 //get data from data base 
-router.get('/:id', (req, res) => {
-    const course = courses.find(i => i.id === parseInt(req.params.id));
-    if (!course) res.status(404).send("Can not get courses");
-    res.send(course);  
+router.get('/:id', async(req, res) => {
+    const result = await Course.find({id : req.params.id});
+    if (!result) res.status(404).send("Can not get courses");
+    res.send(result);
 });
 
 
@@ -140,13 +140,8 @@ router.post('/', async(req, res) => {
 
 
 // upadating datamodel using put request
-router.put('/:id', (req, res) => {
+router.put('/:id', async(req, res) => {
 
-    console.log("Hit enter in put");
-    // at first try to find that courses
-    const course = courses.find(i => i.id === parseInt(req.params.id));
-    if (!course) res.status(404).send("Can not get courses");
-    
     // now try to validate the input
     // clean code by object desstructuring 
     const {error} = validateCourse(req.body);
@@ -154,23 +149,29 @@ router.put('/:id', (req, res) => {
         res.status(400).send(error.details[0].message);
         return ;
     }
+
+    const result = await Course.updateMany({id : req.params.id}, {
+        $set : {
+            name : req.body.name
+        }
+    });
+
+    if (!result) res.status(404).send("Can not get courses");
+
+    console.log(result);
     
-    course.name = req.body.name;
-    res.send(course);
+    res.send(result);
 });
 
 
 // deleting courses from data model delete requst
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async(req, res) => {
     
-    console.log("Hit enter in delete : ");   
-    // at first try to find that courses
-    const course = courses.find(i => i.id === parseInt(req.params.id));
-    if (!course) res.status(404).send("Can not get courses");
+    console.log("Hit enter in delete : ");  
+    const result = await Course.deleteOne({id : req.params.id});
 
-    const index = courses.indexOf(course);
-    courses.slice(index, 1);
-    res.send(course);
+    if (!result) res.status(404).send("Can not get to delete");
+    res.send(result);
 });
 
 
